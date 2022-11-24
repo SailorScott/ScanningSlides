@@ -23,15 +23,18 @@
 import time
 import serial
 
-# Serial takes these two parameters: serial device and baudrate
-ser = serial.Serial("COM3", 9600)
+# Serial takes these two parameters: serial device and baudrate. Check Device Manager for COM port#
+ser = serial.Serial("COM4", 9600)
 
 OUT_MSG_ON = b"\xA0\x01\x01\xA2"
 OUT_MSG_OFF = b"\xA0\x01\x00\xA1"
 
 
-def push_button() -> None:
+def push_button_down() -> None:
     """Send to relay set of commands to advance the projector."""
     ser.write(OUT_MSG_ON)
-    time.sleep(0.5)
+
+
+def push_button_up() -> None:
+    """Send to relay set of commands to advance the projector."""
     ser.write(OUT_MSG_OFF)

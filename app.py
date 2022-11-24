@@ -3,12 +3,13 @@
 # Rotate and crop the image to fit the slide's form factor
 # Advance the slide projector by sending a command to a USB - relay PCB.
 
-import multiprocessing
 
+import time
+
+import ChangeSlide as changeSlide
 import cv2
-
-# import ChangeSlide
 import PySimpleGUI as sg
+import StateMachine as states
 
 sg.theme("Black")
 # Setup user interface
@@ -23,64 +24,118 @@ layout = [
     ],
     [
         sg.Text("Folder for images"),
-        sg.Input(key="folder", default_text="c:\\temp"),
+        sg.Input(key="folder", default_text="C:\\Slides"),
         sg.FolderBrowse(),
     ],
     [sg.Text("Last slide number in carousel"), sg.Input(key="slideCount")],
+    [sg.Text(key="-STATUS-", text="Status...")],
     [sg.Exit(), sg.Button("Start taking photos")],
 ]
-
 window = sg.Window("Slide photo capture", layout=layout)
 
-url = "http://192.168.1.180/billed.jpg"
-video_capture_device_index = 0
+WEBCAM = 0
+webcam = cv2.VideoCapture(WEBCAM, cv2.CAP_DSHOW)
+webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+
+stateInfo = states.StateInfo()
+
+Next_State = {"Action": "", "Action_Time": 0, "TotalSlides": 0, "SlideCounter": 0}
 
 
-def imageDisplay(state):
-
-    while True:
-        webcam = cv2.VideoCapture(video_capture_device_index)
-        ret, frame = webcam.read()  # Read image from capture device (camera)
-        # imgbytes = cv2.imencode(".ppm", frame)[
-        #     1
-        # ].tobytes()  # can also use png.  ppm found to be more efficient
-
-        # window["-IMAGE-"].update(data=imgbytes)
-        cv2.imshow("image", frame)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+def NowTenthsSecond():
+    return int(time.time_ns() / 100000000)
 
 
-t = multiprocessing.Process(target=imageDisplay, args=(True,))
+def Image_Display():
+    # Update the visual display in the UI.
+    ret, frame = webcam.read()
+    if ret:
+        imgbytes = cv2.imencode(".ppm", frame)[1].tobytes()
+        window["-IMAGE-"].update(data=imgbytes)
+
+
+def SavePhoto(pathFileName):
+    ret, frame = webcam.read()
+    cv2.imwrite(pathFileName, frame)
+
+
+def State_Machine():
+    # Sequence of states: (assumes first slide is already in view of camera. )
+    #   Save Photo
+    #   Incrument slide counter, check if done with caroucel
+    # #   Advanced Button Down
+    #   Wait 2 seconds
+    #   Advanced Button Up
+    #   Wait 4 seconds for contrast to stabalize
+    #   Save Photo
+    # If not actions, then default is imageDisplay to update UI
+
+    Current_Time = NowTenthsSecond()
+
+    if Current_Time >= stateInfo.Action_Time:
+        if stateInfo.Action == "SavePhoto":
+            print("savePhoto(slideCounter)")
+            pathFileName = (
+                stateInfo.Folder + "Slide-{}".format(stateInfo.SlideCounter) + ".png"
+            )
+            SavePhoto(pathFileName)
+            stateInfo.Action_Time = Current_Time + 1  # 0.1 seconds
+            stateInfo.Action = "ButtonDown"
+
+        elif stateInfo.Action == "ButtonDown":
+            print("Button Down")
+            changeSlide.push_button_down()
+            stateInfo.Action_Time = Current_Time + 5  # 0.5 seconds
+            stateInfo.Action = "ButtonUp"
+
+        elif stateInfo.Action == "ButtonUp":
+            print("Button Up")
+            changeSlide.push_button_up()
+            stateInfo.Action_Time = Current_Time + 40  # 4 seconds
+            stateInfo.Action = "CheckMorePhotos"
+
+        elif stateInfo.Action == "CheckMorePhotos":
+            print("CheckMorePhotos")
+            stateInfo.SlideCounter += 1
+            if stateInfo.SlideCounter <= stateInfo.TotalSlides:
+                window["-STATUS-"].update("Slide {}".format(stateInfo.SlideCounter))
+                stateInfo.Action = "SavePhoto"
+            else:
+                stateInfo.Action = "Done"
+
+        elif stateInfo.Action == "Done":
+            print("Done")
+            stateInfo.Action = ""
+            window["-STATUS-"].update("DONE!!")
 
 
 # setup main UI loop
 while True:
-    event, values = window.read(timeout=500)
-
-    # imgbytes = cv2.imencode(".png", frame)[
-    #     1
-    # ].tobytes()  # Convert the image to PNG Bytes
-
-    # frame = cv2.imread(
-    #     url,
-    #     flags=cv2.IMREAD_COLOR,
-    # )
+    event, values = window.read(timeout=50, timeout_key="StateMachine")
 
     if event in (sg.WINDOW_CLOSED, "Exit"):
         break
 
+    if event == "StateMachine":
+        State_Machine()
+        Image_Display()
     if event == "Start taking photos":
-        t.start()
-        print("Take Photos now, for slide count:" + values["slideCount"])
-        # print("store in folder:" + values["folder"] + "\\image1.png")
+        # check we have values for slide count
+        slideCount = values["slideCount"].strip()
+        if len(slideCount) == 0:
+            sg.popup("please enter a slide count")
+        else:
+            print("Take Photos now, for slide count:" + slideCount)
+            print("store in folder:" + values["folder"] + "\\image1.png")
+            stateInfo.TotalSlides = int(slideCount)
+            stateInfo.Folder = values["folder"] + "\\"
+            stateInfo.Action_Time = NowTenthsSecond()
+            stateInfo.SlideCounter = 0
+            stateInfo.Action = "CheckMorePhotos"
+            window["-STATUS-"].update("Starting..")
+
         # cv2.imwrite(values["folder"] + "\\image1.png", imgbytes)
 
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-# t.stop()
 
 window.close()
-
-
-# start taking photos
