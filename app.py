@@ -1,6 +1,6 @@
 # Capture an image of a slide and save into local drive.
-# Using a cell phones camera, capture the slide via a Wi-Fi streaming app.
-# Rotate and crop the image to fit the slide's form factor
+# Using a low cost usb camera, capture the slide and save.
+# Rotate the image to fit the slide's form factor
 # Advance the slide projector by sending a command to a USB - relay PCB.
 
 
@@ -15,14 +15,6 @@ sg.theme("Black")
 # Setup user interface
 layout = [
     [
-        sg.Image(
-            filename="",
-            key="-IMAGE-",
-            tooltip="Right click for exit menu",
-            size=(800, 640),
-        )
-    ],
-    [
         sg.Text("Folder for images"),
         sg.Input(key="folder", default_text="C:\\Slides"),
         sg.FolderBrowse(),
@@ -30,17 +22,24 @@ layout = [
     [sg.Text("Last slide number in carousel"), sg.Input(key="slideCount")],
     [sg.Text(key="-STATUS-", text="Status...")],
     [sg.Exit(), sg.Button("Start taking photos")],
+    [
+        sg.Image(
+            filename="",
+            key="-IMAGE-",
+            tooltip="Right click for exit menu",
+            size=(1280, 720),
+        )
+    ],
 ]
 window = sg.Window("Slide photo capture", layout=layout)
 
-WEBCAM = 0
+WEBCAM = 2
 webcam = cv2.VideoCapture(WEBCAM, cv2.CAP_DSHOW)
-webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
-webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
+webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 3264)
+webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 2448)
+
 
 stateInfo = states.StateInfo()
-
-Next_State = {"Action": "", "Action_Time": 0, "TotalSlides": 0, "SlideCounter": 0}
 
 
 def NowTenthsSecond():
@@ -57,7 +56,8 @@ def Image_Display():
 
 def SavePhoto(pathFileName):
     ret, frame = webcam.read()
-    cv2.imwrite(pathFileName, frame)
+    flipped = cv2.flip(frame, 1)
+    cv2.imwrite(pathFileName, flipped)
 
 
 def State_Machine():
@@ -68,8 +68,8 @@ def State_Machine():
     #   Wait 2 seconds
     #   Advanced Button Up
     #   Wait 4 seconds for contrast to stabalize
-    #   Save Photo
-    # If not actions, then default is imageDisplay to update UI
+    #   Check if more, then go to Save Photo
+    #
 
     Current_Time = NowTenthsSecond()
 
@@ -92,7 +92,7 @@ def State_Machine():
         elif stateInfo.Action == "ButtonUp":
             print("Button Up")
             changeSlide.push_button_up()
-            stateInfo.Action_Time = Current_Time + 40  # 4 seconds
+            stateInfo.Action_Time = Current_Time + 60  # 6 seconds
             stateInfo.Action = "CheckMorePhotos"
 
         elif stateInfo.Action == "CheckMorePhotos":
@@ -120,6 +120,7 @@ while True:
     if event == "StateMachine":
         State_Machine()
         Image_Display()
+
     if event == "Start taking photos":
         # check we have values for slide count
         slideCount = values["slideCount"].strip()
@@ -134,8 +135,5 @@ while True:
             stateInfo.SlideCounter = 0
             stateInfo.Action = "CheckMorePhotos"
             window["-STATUS-"].update("Starting..")
-
-        # cv2.imwrite(values["folder"] + "\\image1.png", imgbytes)
-
 
 window.close()
