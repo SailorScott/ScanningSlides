@@ -92,7 +92,7 @@ def State_Machine():
         elif stateInfo.Action == "ButtonUp":
             print("Button Up")
             changeSlide.push_button_up()
-            stateInfo.Action_Time = Current_Time + 60  # 6 seconds
+            stateInfo.Action_Time = Current_Time + 30  # 3 seconds
             stateInfo.Action = "CheckMorePhotos"
 
         elif stateInfo.Action == "CheckMorePhotos":
