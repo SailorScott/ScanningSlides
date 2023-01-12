@@ -4,6 +4,7 @@
 # Advance the slide projector by sending a command to a USB - relay PCB.
 
 
+import os
 import time
 
 import ChangeSlide as changeSlide
@@ -33,7 +34,7 @@ layout = [
 ]
 window = sg.Window("Slide photo capture", layout=layout)
 
-WEBCAM = 2
+WEBCAM = 1
 webcam = cv2.VideoCapture(WEBCAM, cv2.CAP_DSHOW)
 webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 3264)
 webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 2448)
@@ -76,23 +77,47 @@ def State_Machine():
     if Current_Time >= stateInfo.Action_Time:
         if stateInfo.Action == "SavePhoto":
             print("savePhoto(slideCounter)")
+            webcam.set(cv2.CAP_PROP_EXPOSURE, float(-6))
+            time.sleep(2.0)
             pathFileName = (
-                stateInfo.Folder + "Slide-{}".format(stateInfo.SlideCounter) + ".png"
+                stateInfo.Folder + "Slide-{}-1".format(stateInfo.SlideCounter) + ".png"
             )
             SavePhoto(pathFileName)
             stateInfo.Action_Time = Current_Time + 1  # 0.1 seconds
+            stateInfo.Action = "SavePhoto-1"
+
+        elif stateInfo.Action == "SavePhoto-1":
+            print("savePhoto(slideCounter)")
+            webcam.set(cv2.CAP_PROP_EXPOSURE, float(-7))
+            time.sleep(2.0)
+            pathFileName = (
+                stateInfo.Folder + "Slide-{}-2".format(stateInfo.SlideCounter) + ".png"
+            )
+            SavePhoto(pathFileName)
+            stateInfo.Action_Time = Current_Time + 3  # 0.1 seconds
+            stateInfo.Action = "SavePhoto-2"
+
+        elif stateInfo.Action == "SavePhoto-2":
+            print("savePhoto(slideCounter)")
+            webcam.set(cv2.CAP_PROP_EXPOSURE, float(-8))
+            time.sleep(2.0)
+            pathFileName = (
+                stateInfo.Folder + "Slide-{}-3".format(stateInfo.SlideCounter) + ".png"
+            )
+            SavePhoto(pathFileName)
+            stateInfo.Action_Time = Current_Time + 3  # 0.1 seconds
             stateInfo.Action = "ButtonDown"
 
         elif stateInfo.Action == "ButtonDown":
             print("Button Down")
             changeSlide.push_button_down()
-            stateInfo.Action_Time = Current_Time + 5  # 0.5 seconds
+            stateInfo.Action_Time = Current_Time + 3  # 0.1 seconds
             stateInfo.Action = "ButtonUp"
 
         elif stateInfo.Action == "ButtonUp":
             print("Button Up")
             changeSlide.push_button_up()
-            stateInfo.Action_Time = Current_Time + 30  # 3 seconds
+            stateInfo.Action_Time = Current_Time + 60  #  tenths seconds
             stateInfo.Action = "CheckMorePhotos"
 
         elif stateInfo.Action == "CheckMorePhotos":
@@ -112,7 +137,7 @@ def State_Machine():
 
 # setup main UI loop
 while True:
-    event, values = window.read(timeout=50, timeout_key="StateMachine")
+    event, values = window.read(timeout=100, timeout_key="StateMachine")
 
     if event in (sg.WINDOW_CLOSED, "Exit"):
         break
@@ -122,6 +147,11 @@ while True:
         Image_Display()
 
     if event == "Start taking photos":
+        # check/create folder
+        folder = values["folder"] + "\\"
+        if not os.path.exists(folder):
+            os.mkdir(folder)
+
         # check we have values for slide count
         slideCount = values["slideCount"].strip()
         if len(slideCount) == 0:
