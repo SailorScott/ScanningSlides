@@ -21,7 +21,7 @@ slideCount = 0
 # Setup user interface
 col1 = [
     [
-        sg.Button("Save Image 1"),
+        sg.Button("Flip 1"), sg.Button("Rotate 1"),
         sg.Image(
             filename="",
             key="-IMAGE1-",
@@ -33,7 +33,7 @@ col1 = [
 ]
 col2 = [
     [
-        sg.Button("Save Image 2"),
+        sg.Button("Flip 2"), sg.Button("Rotate 2"),
         sg.Image(
             filename="",
             key="-IMAGE2-",
@@ -45,7 +45,7 @@ col2 = [
 ]
 col3 = [
     [
-        sg.Button("Save Image 3"),
+        sg.Button("Flip 3"), sg.Button("Rotate 3"),
         sg.Image(
             filename="",
             key="-IMAGE3-",
@@ -60,7 +60,7 @@ layout = [
     [
         sg.Text("Folder for images"),
         # sg.Input(size=(25, 1), key="-FILE-", default_text="C:\\ScottsProjects\\Slides\\car3\\Slide-1-1.png"),
-        sg.Input(key="-FOLDER-", default_text="C:\\ScottsProjects\\Slides\\"),
+        sg.Input(key="-FOLDER-", default_text="C:\\ScottsProjects\\Slides"),
         sg.FolderBrowse(),
         sg.Button("Load Images"),
     ],
@@ -101,32 +101,46 @@ def loadImage(folderName, slideNum, exposureNum):
     else:
         window["-IMAGE" + str(exposureNum) + "-"].update(None)
 
+def FlipImage(slideNum, exposureNum):
+    TransposeImage(slideNum, exposureNum, Image.Transpose.FLIP_LEFT_RIGHT)
+    
+def RotateImage(slideNum, exposureNum):
+    TransposeImage(slideNum, exposureNum, Image.Transpose.ROTATE_90)
+
+def TransposeImage(slideNum, exposureNum, transpose):
+    folderName = values["-FOLDER-"]
+    source = (
+            folderName + "\\Slide-" + str(slideNum) + "-" + str(exposureNum) + ".png"
+        )
+    print("Transpose:", source)
+    image = Image.open(source)
+    out = image.transpose(transpose)
+    out.save(source)
 
 def SaveThisOne(slideNum, saveExposureNum):
     print("SaveThisOne:", saveExposureNum)
     folderName = values["-FOLDER-"]
 
     for exposureNum in range(1, 4):
-        if int(saveExposureNum) == exposureNum:
-            return
-
-        source = (
-            folderName + "\\Slide-" + str(slideNum) + "-" + str(exposureNum) + ".png"
-        )
-        if os.path.exists(source):
-            destination = (
-                folderName
-                + "\\Attic\\Slide-"
-                + str(slideNum)
-                + "-"
-                + str(exposureNum)
-                + ".png"
+        if int(saveExposureNum) != exposureNum:
+ 
+            source = (
+                folderName + "\\Slide-" + str(slideNum) + "-" + str(exposureNum) + ".png"
             )
-            shutil.move(source, destination)
+            if os.path.exists(source):
+                destination = (
+                    folderName
+                    + "\\Attic\\Slide-"
+                    + str(slideNum)
+                    + "-"
+                    + str(exposureNum)
+                    + ".png"
+                )
+                shutil.move(source, destination)
 
 
 # setup main UI loop
-slideCount = 0
+slideCount = 1
 while True:
     event, values = window.read(timeout=1000)
 
@@ -135,7 +149,7 @@ while True:
 
     if event == "Load Images":
         window["-STATUS-"].update("loading..")
-        slideCount = 0
+        slideCount = 1
         folder = values["-FOLDER-"] 
         if not os.path.exists(folder + "\\Attic"):
             os.mkdir(folder + "\\Attic")
@@ -145,6 +159,16 @@ while True:
         image2Save = event[6:7]
         SaveThisOne(slideCount, image2Save)
         slideCount += 1
+        nextImages(slideCount)
+
+    if event in ("Flip 1", "Flip 2", "Flip 3"):
+        image2Save = event[5:6]
+        FlipImage(slideCount, image2Save)
+        nextImages(slideCount)
+
+    if event in ("Rotate 1", "Rotate 2", "Rotate 3"):
+        image2Save = event[7:8]
+        RotateImage(slideCount, image2Save)
         nextImages(slideCount)
 
     if event == "Next Image":
