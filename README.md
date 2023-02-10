@@ -1,6 +1,8 @@
 # Scanning Projector Slides
 TL;DR Low cost approach to capture slides using a webcam, USB Relay and hacked slide projector. Software to adjust camera, capture slides and pick slide to save.
+
 ![Setup of projector, actuating solenoid, camera and laptop](/Setup/IMG_3772.jpg?raw=true "Setup of projector, actuating solenoid, camera and laptop")
+
 Like many, my father took 100s of slides when I was a kid and to get them all digitized is quite expensive. So, this is an approach to capture images using a USB web camera, USB controlled relay to activate the slide projector's advance and Python running on an old laptop to glue it all together.
 My fathers projector is a basic unit that did not have an external slide advance remote control, so I had to put a solenoid on the side to actuate. If you have a remote, you could directly wire it to the USB controlled relay. 
 
@@ -61,6 +63,8 @@ I still have some more to do, but so far I have captured 873 good slides.  Becau
 
 
 
-![Setup of projector, actuating solenoid, camera and laptop](/Setup/IMG_3772.jpg?raw=true "Setup of projector, actuating solenoid, camera and laptop")
+![Setup of projector, actuating solenoid, camera and laptop](/Setup/IMG_3795.jpg?raw=true "Setup of projector, actuating solenoid, camera and laptop with high quality lens")
 
-![Setup with better lens and using Tripod for better alignment control](/Setup/IMG_3772.jpg?raw=true "with better lens and using Tripod for better alignment control")
+![Close up of the solenoid](/Setup/IMG_3853.jpg?raw=true "Close up of solenoid")
+
+![Gap in light bulb door that thin sheet of plastic slides into.](/Setup/IMG_3854.jpg?raw=true "Gap in light bulb door that thin sheet of plastic slides into.")
