@@ -1,6 +1,6 @@
 # class that interacts with the USB Serial Relay.
 # Sends commands to relay and it will energy to close the NO circuit to advance the projector carousel
-
+# © SailorScott 2023
 # https://www.amazon.com/Buying-Dual-Channel-Microcontroller-Intelligent-Overcurrent/dp/B0B64TNS2C/
 # (See reviews for better control scheme)
 
@@ -20,7 +20,6 @@
 # Open 2nd channel USB: A0 02 01 A3
 # Close 2nd channel USB: A0 02 00 A2
 
-import time
 import serial
 
 # Serial takes these two parameters: serial device and baudrate. Check Device Manager for COM port#

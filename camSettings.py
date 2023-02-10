@@ -1,8 +1,5 @@
-# Capture an image of a slide and save into local drive.
-# Using a low cost usb camera, capture the slide and save.
-# Rotate the image to fit the slide's form factor
-# Advance the slide projector by sending a command to a USB - relay PCB.
-
+# Read and set the camera settings 
+# © SailorScott 2023
 import time
 
 import cv2
@@ -69,7 +66,7 @@ layout = [
         sg.Button("Change CAP_PROP_EXPOSURE"),
     ],
     [
-        sg.Text("CAP_PROP_AUTO_EXPOSURE (default -1?)"),
+        sg.Text("CAP_PROP_AUTO_EXPOSURE (Use 0.75 to turn off auto exposure)"),
         sg.Input(key="CAP_PROP_AUTO_EXPOSURE"),
         sg.Button("Change CAP_PROP_AUTO_EXPOSURE"),
     ],
@@ -86,14 +83,11 @@ layout = [
 ]
 window = sg.Window("Slide photo capture", layout=layout, location=(0, 0))
 
+######### Webcam setup
 WEBCAM = 1
 webcam = cv2.VideoCapture(WEBCAM, cv2.CAP_DSHOW)
 webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
 webcam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1024)
-
-
-def NowTenthsSecond():
-    return int(time.time_ns() / 100000000)
 
 
 def Image_Display():

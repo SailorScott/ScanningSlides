@@ -2,6 +2,7 @@
 # Using a low cost usb camera, capture the slide and save.
 # Rotate the image to fit the slide's form factor
 # Advance the slide projector by sending a command to a USB - relay PCB.
+# © SailorScott 2023
 
 
 import os
@@ -34,6 +35,7 @@ layout = [
 ]
 window = sg.Window("Slide photo capture", layout=layout)
 
+######### Webcamera setup #############
 WEBCAM = 1
 webcam = cv2.VideoCapture(WEBCAM, cv2.CAP_DSHOW)
 webcam.set(cv2.CAP_PROP_FRAME_WIDTH, 3264)

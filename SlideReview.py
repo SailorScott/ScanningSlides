@@ -3,6 +3,8 @@ Review of images, selection of the best. With capture took 2 or 3 exposures, and
 Display the photos side by side, and then click the corresponding keep button. The other 1 or 2 get sent to Attic folder.
 Optional functions to flip the photo if backwards.
 Loops through the folder getting the images.
+
+© SailorScott 2023
 """
 
 import io
@@ -76,11 +78,7 @@ layout = [
 window = sg.Window("Slide photo capture", layout=layout)
 
 
-# def SavePhoto(pathFileName):
-# ret, frame = webcam.read()
-# flipped = cv2.flip(frame, 1)
-# cv2.imwrite(pathFileName, flipped)
-
+# Take one slide refence and build up the 3 exposures
 def nextImages(slideCount):
     folder = values["-FOLDER-"]
     loadImage(folder, slideCount, 1)
